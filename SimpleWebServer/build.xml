@@ -1,0 +1,13 @@
+<project name="WebServer" default="compile" basedir=".">
+	
+	<target name="compile">
+		<delete dir="bin"/>
+		<mkdir dir="bin"/>
+		<javac srcdir="src" destdir="bin"/>
+	</target>
+
+	<target name="run">
+		<java failonerror="yes" classname="edu.nmsu.cs.webserver.WebServer" classpath="bin"></java>
+	</target>
+	
+</project>
