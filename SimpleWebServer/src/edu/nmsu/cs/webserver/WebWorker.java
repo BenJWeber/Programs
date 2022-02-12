@@ -1,7 +1,7 @@
 package edu.nmsu.cs.webserver;
 
 /**
- * Web worker: an object of this class executes in its own new thread to receive and respond to a
+ * "Web worker: an object of this class executes in its own new thread to receive and respond to a
  * single HTTP request. After the constructor the object executes on its "run" method, and leaves
  * when it is done.
  *
@@ -15,9 +15,14 @@ package edu.nmsu.cs.webserver;
  * does three things in a row, invoking three methods in this class: it reads the incoming HTTP
  * request; it writes out an HTTP header to begin its response, and then it writes out some HTML
  * content for the response content. HTTP requests and responses are just lines of text (in a very
- * particular format).
+ * particular format)." - original description by Jon Cook, Ph.D.
+ * 
+ * Some details have been changed, including how run() works and additional functionality like 
+ * error 404 handling, and HTML file serving. run() now hands off processing to readHTTPRequest().
  * 
  * @author Jon Cook, Ph.D.
+ * @author Benjamin Weber
+ *
  *
  **/
 
@@ -57,9 +62,10 @@ public class WebWorker implements Runnable
 		{
 			InputStream is = socket.getInputStream();
 			OutputStream os = socket.getOutputStream();
+			
+			// removed calls to writeHTTPRequest() and writeContent()
+			// readHTTPRequest() will process these calls now
 			readHTTPRequest(is, os);
-			//writeHTTPHeader(os, "text/html");
-			//writeContent(os);
 			os.flush();
 			socket.close();
 		}
@@ -72,7 +78,7 @@ public class WebWorker implements Runnable
 	}
 
 	/**
-	 * Read the HTTP request header.
+	 * Read the HTTP request header and decide how to respond.
 	 **/
 	private void readHTTPRequest(InputStream is, OutputStream os)
 	{
@@ -87,10 +93,15 @@ public class WebWorker implements Runnable
 				while (!r.ready())
 					Thread.sleep(1);
 				line = r.readLine();
+				
+				// check if GET request
 				if (line.substring(0, 3).equals("GET")) {
 					
+					// store path of GET request
 					fileName = line.substring(4, line.lastIndexOf(" "));
 					
+					// if fileName is not root then attempt to open with absolute path
+					// otherwise call default writeContent()
 					if (!(fileName.equals("/"))) {
 						fileName = System.getProperty("user.dir") + fileName;
 						File checkFile = new File(fileName);
@@ -98,6 +109,8 @@ public class WebWorker implements Runnable
 							writeHTTPHeader(os, "text/html", 200);
 							writeContentFile(os, checkFile);
 						}
+						
+						// if file didn't exist then send error 404
 						else {
 							writeHTTPHeader(os, "text/html", 404);
 							write404(os);
@@ -129,22 +142,24 @@ public class WebWorker implements Runnable
 	 *          is the OutputStream object to write to
 	 * @param contentType
 	 *          is the string MIME content type (e.g. "text/html")
+	 * @
 	 **/
 	private void writeHTTPHeader(OutputStream os, String contentType, int code) throws Exception
 	{
 		Date d = new Date();
 		DateFormat df = DateFormat.getDateTimeInstance();
 		df.setTimeZone(TimeZone.getTimeZone("GMT"));
+		
+		// check for error code
 		if (code == 404)
 			os.write("HTTP/1.1 404\n".getBytes());
 		else
 			os.write("HTTP/1.1 200 OK\n".getBytes());
+		
 		os.write("Date: ".getBytes());
 		os.write((df.format(d)).getBytes());
 		os.write("\n".getBytes());
-		os.write("Server: Jon's very own server\n".getBytes());
-		// os.write("Last-Modified: Wed, 08 Jan 2003 23:11:55 GMT\n".getBytes());
-		// os.write("Content-Length: 438\n".getBytes());
+		os.write("Server: Ben's server\n".getBytes());
 		os.write("Connection: close\n".getBytes());
 		os.write("Content-Type: ".getBytes());
 		os.write(contentType.getBytes());
@@ -166,13 +181,23 @@ public class WebWorker implements Runnable
 		os.write("</body></html>\n".getBytes());
 	}
 	private void writeContentFile(OutputStream os, File file) throws Exception {
+		// get date
+		Date d = new Date();
+		DateFormat df = DateFormat.getDateInstance();
+		df.setTimeZone(TimeZone.getTimeZone("MST"));
+		
+		// pull file into string for processing and replace custom tags
+		String fileString = new String(Files.readAllBytes(file.toPath()));
+		fileString = fileString.replace("<cs371date>", df.format(d));
+		fileString = fileString.replace("<cs371server>", "Ben's Server");
+		
+		// send file to output
 		os.write("<html><head></head><body>\n".getBytes());
-		os.write(Files.readAllBytes(file.toPath()));
+		os.write(("<p>" + fileString + "</p>\n").getBytes());
 		os.write("</body></html>\n".getBytes());
 
 	}
 	private void write404(OutputStream os) throws Exception {
-		os.write("HTTP/1.1 404\n".getBytes());
 		os.write("<html><head></head><body>\n".getBytes());
 		os.write("<h3>404 Not Found</h3>\n".getBytes());
 		os.write("</body></html>\n".getBytes());
