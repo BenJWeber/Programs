@@ -1,13 +1,20 @@
-<project name="WebServer" default="compile" basedir=".">
+<project name="WebServer" default="buildrun" basedir=".">
 	
-	<target name="compile">
-		<delete dir="bin"/>
-		<mkdir dir="bin"/>
-		<javac srcdir="src" destdir="bin"/>
+	<target name="buildrun">
+		<delete dir="test/bin"/>
+		<mkdir dir="test/bin"/>
+		<javac srcdir="src" destdir="test/bin"/>
+		<java failonerror="yes" classname="edu.nmsu.cs.webserver.WebServer" classpath="test/bin"></java>
 	</target>
 
-	<target name="run">
-		<java failonerror="yes" classname="edu.nmsu.cs.webserver.WebServer" classpath="bin"></java>
+	<target name="compile">
+		<delete dir="test/bin"/>
+		<mkdir dir="test/bin"/>
+		<javac srcdir="src" destdir="test/bin"/>
+	</target>
+
+	<target name="run" depends="compile">
+		<java failonerror="yes" classname="edu.nmsu.cs.webserver.WebServer" classpath="test/bin"></java>
 	</target>
 	
 </project>

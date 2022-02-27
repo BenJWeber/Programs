@@ -1,4 +1,0 @@
-File opening works..
-
-Date: <cs371date>
-Server: <cs371server>

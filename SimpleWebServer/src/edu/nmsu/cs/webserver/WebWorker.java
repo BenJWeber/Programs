@@ -103,11 +103,32 @@ public class WebWorker implements Runnable
 					// if fileName is not root then attempt to open with absolute path
 					// otherwise call default writeContent()
 					if (!(fileName.equals("/"))) {
-						fileName = System.getProperty("user.dir") + fileName;
+						fileName = System.getProperty("user.dir") + "/www/" + fileName;
 						File checkFile = new File(fileName);
 						if (checkFile.exists()) {
-							writeHTTPHeader(os, "text/html", 200);
-							writeContentFile(os, checkFile);
+							String extension = fileName.substring(fileName.indexOf('.'), fileName.length());
+							switch (extension) {
+								case ".jpg":
+									writeHTTPHeader(os, "image/jpeg", 200);
+									writeContentImage(os, checkFile);
+									break;
+								case ".jpeg":
+									writeHTTPHeader(os, "image/jpeg", 200);
+									writeContentImage(os, checkFile);
+									break;
+								case ".gif":
+									writeHTTPHeader(os, "image/gif", 200);
+									writeContentImage(os, checkFile);
+									break;
+								case ".png":
+									writeHTTPHeader(os, "image/png", 200);
+									writeContentImage(os, checkFile);
+									break;
+								default: 
+									writeHTTPHeader(os, "text/html", 200);
+									writeContentFile(os, checkFile);
+									break;
+							}
 						}
 						
 						// if file didn't exist then send error 404
@@ -132,7 +153,6 @@ public class WebWorker implements Runnable
 				break;
 			}
 		}
-		return;
 	}
 
 	/**
@@ -177,8 +197,9 @@ public class WebWorker implements Runnable
 	private void writeContent(OutputStream os) throws Exception
 	{
 		os.write("<html><head></head><body>\n".getBytes());
-		os.write("<h3>My web server works!</h3>\n".getBytes());
-		os.write("<a href=\"hello.html\">Testing Link</a>".getBytes());
+		os.write("<h3>Ben's Web Server</h3>\n".getBytes());
+		os.write("<a href=\"hello.html\">P1 Testing Link</a><br>".getBytes());
+		os.write("<a href=\"images.html\">P2 Images Link</a>".getBytes());
 		os.write("</body></html>\n".getBytes());
 	}
 	private void writeContentFile(OutputStream os, File file) throws Exception {
@@ -202,6 +223,10 @@ public class WebWorker implements Runnable
 		os.write("<html><head></head><body>\n".getBytes());
 		os.write("<h3>404 Not Found</h3>\n".getBytes());
 		os.write("</body></html>\n".getBytes());
+	}
+
+	private void writeContentImage(OutputStream os, File image) throws Exception {
+		os.write((Files.readAllBytes(image.toPath())));
 	}
 
 } // end class
