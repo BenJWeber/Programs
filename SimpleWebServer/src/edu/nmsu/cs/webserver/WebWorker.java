@@ -226,7 +226,7 @@ public class WebWorker implements Runnable
 	}
 
 	private void writeContentImage(OutputStream os, File image) throws Exception {
-		os.write((Files.readAllBytes(image.toPath())));
+		os.write(Files.readAllBytes(image.toPath()));
 	}
 
 } // end class
