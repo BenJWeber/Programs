@@ -106,7 +106,7 @@ public class WebWorker implements Runnable
 						fileName = System.getProperty("user.dir") + "/www/" + fileName;
 						File checkFile = new File(fileName);
 						if (checkFile.exists()) {
-							String extension = fileName.substring(fileName.indexOf('.'), fileName.length());
+							String extension = fileName.substring(fileName.lastIndexOf('.'), fileName.length());
 							switch (extension) {
 								case ".jpg":
 									writeHTTPHeader(os, "image/jpeg", 200);
